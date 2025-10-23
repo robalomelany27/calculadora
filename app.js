@@ -1,9 +1,9 @@
 <script>
 // ========= Config =========
-const WHATSAPP_TEL = '5491127870031'; // Cambiá aquí si necesitás otro número
+const WHATSAPP_TEL = '5491127870031';
 const SHARE_TITLE  = 'PLAN GRUPOZZETTO & OMBU';
 
-// ========= Utilidades =========
+// ========= Utils =========
 const $  = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
 const clampToStep = (val, min, max, step) => {
@@ -12,75 +12,51 @@ const clampToStep = (val, min, max, step) => {
   if (mod !== 0) v = v - mod;
   return v;
 };
-const provNombre = () => {
-  const v = $('prov').value;
-  return v==='cordoba' ? 'Córdoba' : 'Otra provincia';
-};
+const provNombre = () => $('prov').value==='cordoba' ? 'Córdoba' : 'Otra provincia';
 
 // ========= Estado =========
 let persona = 'pf';
-$('pf').addEventListener('click', ()=>{
-  persona='pf';
-  $('pf').classList.add('active');
-  $('pj').classList.remove('active');
-  calc();
-});
-$('pj').addEventListener('click', ()=>{
-  persona='pj';
-  $('pj').classList.add('active');
-  $('pf').classList.remove('active');
-  calc();
-});
+$('pf').addEventListener('click', ()=>{ persona='pf'; $('pf').classList.add('active'); $('pj').classList.remove('active'); calc(); });
+$('pj').addEventListener('click', ()=>{ persona='pj'; $('pj').classList.add('active'); $('pf').classList.remove('active'); calc(); });
 
-// ========= Parámetros y fórmulas =========
+// ========= Cálculo =========
 function params(){
   const V = clampToStep(Number(($('vbm').value||'').toString().replace(/\D/g,'')) || 0, 40000000, 72000000, 10000);
   $('vbm').value = V ? V : 40000000;
-
   const cuota = Math.max(1, Math.min(60, Number(($('ncuota').value||'').toString().replace(/\D/g,'')) || 1));
   $('ncuota').value = cuota;
 
-  // Sello: 1.2% (excepto Córdoba), prorrateado en 6 cuotas
   const selloTotal = ($('prov').value === 'cordoba') ? 0 : V * 0.012;
   const selloCuota = selloTotal / 6;
 
-  // Carga administrativa 8% sobre V, prorrateada 60, + IVA 21%
   const adminPorCuota = (V * 0.08) / 60;
   const adminIVA = adminPorCuota * 0.21;
   const adminTotalCuota = adminPorCuota + adminIVA;
 
-  // Cuota pura (plan sin interés a 60 meses)
   const cuotaPura = V / 60;
-
-  // Imp. débito/crédito: 0.804% sobre cuota pura
   const idc = cuotaPura * 0.00804;
-
-  // Seguro de vida: 0.0833% del saldo deudor (aprox lineal)
   const saldoDeudor = V - cuotaPura * (cuota - 1);
   const seguro = Math.max(0, saldoDeudor) * 0.000833;
-
   const total = cuotaPura + adminTotalCuota + seguro + idc;
 
-  return {V, cuota, selloCuota, selloTotal, adminTotalCuota, cuotaPura, idc, seguro, total};
+  return {V, cuota, selloCuota, adminTotalCuota, cuotaPura, idc, seguro, total};
 }
 
-// ========= Texto de resumen (para compartir / WhatsApp) =========
+// ========= Resumen (compartir / WhatsApp) =========
 function resumenTexto(){
   const P = params();
   const selloTexto = ($('prov').value==='cordoba') ? '0% (exento)' : '1,2% prorrateado en 6 cuotas';
   const selloCuota = (P.cuota>=1 && P.cuota<=6)? fmt(P.selloCuota) : fmt(0);
 
-  const pagoLabel = P.cuota === 1 ? '1er pago' : `Pago #${P.cuota}`;
-
   return `${SHARE_TITLE}
 V.B.M.: ${fmt(P.V)} · ${persona==='pf'?'Persona física':'Persona jurídica'}
 Provincia: ${provNombre()}
-${pagoLabel}: ${fmt(P.total)} (sin sello)
+Cuota #${$('ncuota').value}: ${fmt(P.total)} (sin sello)
 Detalle: Pura ${fmt(P.cuotaPura)} · Adm+IVA ${fmt(P.adminTotalCuota)} · Seguro ${fmt(P.seguro)} · IDC ${fmt(P.idc)}
 Sello por cuota (${selloTexto}): ${selloCuota}`;
 }
 
-// ========= Cálculo y render =========
+// ========= Render =========
 function calc(){
   const P = params();
   $('k_pura').textContent  = fmt(P.cuotaPura);
@@ -95,17 +71,17 @@ function calc(){
 $('btn-calc').addEventListener('click', calc);
 ['vbm','ncuota','prov'].forEach(id=> $(id).addEventListener('change', calc));
 
-// Compartir
+// Compartir (SOLO 'text' para evitar títulos duplicados)
 $('btn-share').addEventListener('click', ()=>{
   const text = resumenTexto();
   if(navigator.share){
-    navigator.share({ title: SHARE_TITLE, text }).catch(()=>{});
+    navigator.share({ text }).catch(()=>{});
   }else{
     navigator.clipboard.writeText(text).then(()=>alert('Detalle copiado para compartir'));
   }
 });
 
-// WhatsApp
+// WhatsApp (incluye el encabezado en el cuerpo)
 $('btn-wa').addEventListener('click', ()=>{
   const text = resumenTexto();
   const url = `https://wa.me/${WHATSAPP_TEL}?text=${encodeURIComponent(text)}`;
