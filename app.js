@@ -68,7 +68,7 @@ function resumenTexto(){
   const selloTexto = ($('prov').value==='cordoba') ? '0% (exento)' : '1,2% prorrateado en 6 cuotas';
   const selloCuota = (P.cuota>=1 && P.cuota<=6)? fmt(P.selloCuota) : fmt(0);
 
-  return `Grupo Zzetto - plan de ahorro
+  return `PLAN GRUPOZZETTO & OMBU
 V.B.M.: ${fmt(P.V)} · ${persona==='pf'?'Persona física':'Persona jurídica'}
 Provincia: ${provNombre()}
 Cuota #${$('ncuota').value}: ${fmt(P.total)} (sin sello)
