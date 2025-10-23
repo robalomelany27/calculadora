@@ -1,5 +1,7 @@
+<script>
 // ========= Config =========
 const WHATSAPP_TEL = '5491127870031'; // Cambiá aquí si necesitás otro número
+const SHARE_TITLE  = 'PLAN GRUPOZZETTO & OMBU';
 
 // ========= Utilidades =========
 const $  = id => document.getElementById(id);
@@ -68,10 +70,12 @@ function resumenTexto(){
   const selloTexto = ($('prov').value==='cordoba') ? '0% (exento)' : '1,2% prorrateado en 6 cuotas';
   const selloCuota = (P.cuota>=1 && P.cuota<=6)? fmt(P.selloCuota) : fmt(0);
 
-  return `PLAN GRUPOZZETTO & OMBU
+  const pagoLabel = P.cuota === 1 ? '1er pago' : `Pago #${P.cuota}`;
+
+  return `${SHARE_TITLE}
 V.B.M.: ${fmt(P.V)} · ${persona==='pf'?'Persona física':'Persona jurídica'}
 Provincia: ${provNombre()}
-Cuota #${$('ncuota').value}: ${fmt(P.total)} (sin sello)
+${pagoLabel}: ${fmt(P.total)} (sin sello)
 Detalle: Pura ${fmt(P.cuotaPura)} · Adm+IVA ${fmt(P.adminTotalCuota)} · Seguro ${fmt(P.seguro)} · IDC ${fmt(P.idc)}
 Sello por cuota (${selloTexto}): ${selloCuota}`;
 }
@@ -91,17 +95,17 @@ function calc(){
 $('btn-calc').addEventListener('click', calc);
 ['vbm','ncuota','prov'].forEach(id=> $(id).addEventListener('change', calc));
 
-// Compartir (mismo detalle, con título requerido)
+// Compartir
 $('btn-share').addEventListener('click', ()=>{
   const text = resumenTexto();
   if(navigator.share){
-    navigator.share({title: 'Grupo Zzetto - plan de ahorro', text}).catch(()=>{});
+    navigator.share({ title: SHARE_TITLE, text }).catch(()=>{});
   }else{
     navigator.clipboard.writeText(text).then(()=>alert('Detalle copiado para compartir'));
   }
 });
 
-// Contactar asesor con el detalle (WhatsApp)
+// WhatsApp
 $('btn-wa').addEventListener('click', ()=>{
   const text = resumenTexto();
   const url = `https://wa.me/${WHATSAPP_TEL}?text=${encodeURIComponent(text)}`;
@@ -113,3 +117,4 @@ calc();
 ['vbm','ncuota'].forEach(id=>{
   $(id).addEventListener('keyup', e => { if(e.key==='Enter') calc(); });
 });
+</script>
