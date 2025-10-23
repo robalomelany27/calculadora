@@ -1,4 +1,4 @@
-<script>
+
 // ========= Config =========
 const WHATSAPP_TEL = '5491127870031';
 const SHARE_TITLE  = 'PLAN GRUPOZZETTO & OMBU';
@@ -93,4 +93,4 @@ calc();
 ['vbm','ncuota'].forEach(id=>{
   $(id).addEventListener('keyup', e => { if(e.key==='Enter') calc(); });
 });
-</script>
+
